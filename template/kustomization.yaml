@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tenant-ovn-kubernetes
+generatorOptions:
+ disableNameSuffixHash: true
+resources:
+- ovnkube-node.yaml
+- serviceaccount.yaml
+images:
+- name: ovnkube
+  newName: quay.io/zshi/ovn-daemonset
+  newTag: arm-2042-20210629-f78a186
+configMapGenerator:
+- name: ovnkube-config
+  files:
+  - .generated/ovnkube.conf
+- name: ovn-ca
+  files:
+  - .generated/ca-bundle.crt
+- name: tenant-cluster-ca
+  files:
+  - .generated/ca.crt
+secretGenerator:
+- name: ovn-cert
+  type: kubernetes.io/tls
+  files:  
+  - .generated/tls.crt
+  - .generated/tls.key
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: DaemonSet
+    name: ovnkube-node
+  path: .generated/custom-env.yaml
