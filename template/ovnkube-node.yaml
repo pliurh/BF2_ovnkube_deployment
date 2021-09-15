@@ -127,7 +127,6 @@ spec:
           gateway_mode_flags="--gateway-mode shared --gateway-interface br-ex"
           OVNKUBE_NODE_MODE="--ovnkube-node-mode smart-nic"
           OVNKUBE_NODE_MGMT_PORT_NETDEV="--ovnkube-node-mgmt-port-netdev eth3"
-          SMART_NIC_IP="192.168.111.33"
 
           exec /usr/bin/ovnkube --init-node "${K8S_NODE}" --encap-ip "${SMART_NIC_IP}" \
             --nb-address "ssl:192.168.111.20:9641,ssl:192.168.111.21:9641,ssl:192.168.111.22:9641" \
@@ -161,7 +160,13 @@ spec:
         - name: OVN_KUBE_LOG_LEVEL
           value: "4"
         - name: K8S_NODE
-          value: worker-advnetlab13
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['dpu.openshift.io/x86-node-name']
+        - name: SMART_NIC_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['dpu.openshift.io/x86-node-ip']
         ports:
         - name: metrics-port
           containerPort: 29103
@@ -215,7 +220,7 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 5
       nodeSelector:
-        kubernetes.io/hostname: bf2-worker-advnetlab13
+        node-role.kubernetes.io/dpu: ""
       volumes:
       # for checking ovs-configuration service
       - name: systemd-units
